@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="style.css"></link>
+    </head>
+    <body>
+      <div id="left"></div>
+      <canvas id="canvas" width="720" height="720" onclick="onClick(event)" onmousemove="onMouseMove(event)"></canvas>      
+      <div id="right">
+        <div id="rank-board">
+          <div id="board-title">Leaderboard</div>
+          <div id="labels">
+            <div id="group-text">group</div>
+            <div id="score-text">score</div>
+          </div>
+          <div id="group-rank-container"></div>
+        </div>
+      </div>
+    </body>
+    <script src="main.js"></script>
+</html>
