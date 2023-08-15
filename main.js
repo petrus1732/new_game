@@ -38,7 +38,7 @@ const getGroupId = (num) => {
 
 const fillBlock = (d, r, color) => {
   ctx.beginPath();
-  ctx.fillStyle = color
+  ctx.fillStyle = color;
   ctx.moveTo(mid + r*rUnit*Math.cos((d+1)*dUnit), mid + r*rUnit*Math.sin((d+1)*dUnit));
   ctx.lineTo(mid + (r+1)*rUnit*Math.cos((d+1)*dUnit), mid + (r+1)*rUnit*Math.sin((d+1)*dUnit));
   ctx.arc(mid, mid, (r+1)*rUnit, (d+1)*dUnit, d*dUnit, true);
@@ -47,10 +47,21 @@ const fillBlock = (d, r, color) => {
   ctx.fill(); 
 }
 
+const markInitBlock = (group) => {
+  ctx.beginPath();
+  ctx.strokeStyle = group.color;
+  ctx.lineWidth = 4;
+  const n = group.number;
+  ctx.arc(mid, mid, R, n*3*dUnit, (n*3 - 1)*dUnit, true);
+  ctx.stroke();
+}
+
 const init = () => {  
   clear()
   ctx.beginPath(); 
   ctx.fillStyle = bgColor;
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgb(255,255,255)';
   for (let i = 0; i < numLines; i++) {
     ctx.moveTo(mid, mid);
     ctx.lineTo(mid + R*Math.cos(Math.PI/numLines*2*i), mid + R*Math.sin(dUnit*i));
@@ -60,11 +71,13 @@ const init = () => {
     ctx.arc(mid, mid, rUnit*i, 0, 2*Math.PI);
   }
   ctx.stroke();
+  groupList.forEach(group => markInitBlock(group))
   fill.forEach((_, d) => _.forEach((x, r) => {
     if (x !== 0) {
       fillBlock(d, r, groupList[getGroupId(fill[d][r])].color);
     }
   }))
+  
 }
 
 const getPos = (e) => {
@@ -85,7 +98,7 @@ const onClick = (e) => {
       fillBlock(d, r, filledColor);
       groupList[idx].score += 1
       localStorage.setItem(`${d}_${r}`, groupList[idx].number);
-      console.log(`store:${groupList[idx].number}`);
+      //console.log(`store:${groupList[idx].number}`);
       changeRank();
     }
     else {
