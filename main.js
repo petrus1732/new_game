@@ -23,6 +23,19 @@ const groupList = [];
 let currentGroup = 1;
 let groupsSet = false;
 
+const groupColor = [
+  {r:255,g:0,b:0},
+  {r:0,g:255,b:0},
+  {r:128,g:128,b:0},
+  {r:255,g:255,b:0},
+  {r:0,g:255,b:255},
+  {r:255,g:0,b:255},
+  {r:255,g:165,b:0},
+  {r:128,g:0,b:128},
+  {r:0,g:128,b:128},
+  {r:255,g:192,b:203},
+]
+
 const clear = () => {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 }
@@ -154,9 +167,9 @@ const generateGroups = () => {
           }
       }
       else{
-          r = (Math.random()+1)*128;
-          g = (Math.random()+1)*128;
-          b = (Math.random()+1)*128;
+          r = groupColor[i-1].r
+          g = groupColor[i-1].g
+          b = groupColor[i-1].b
          
           group = {
               number: i,
