@@ -1,6 +1,8 @@
 const mid = 360
 const numLines = 30;
-const numCircles = 20;
+const numCircles = 13;
+const bigCircleSize = 3;
+let bigCircleId = 0;
 const R = 350
 const rUnit = R/numCircles;
 const dUnit = Math.PI/numLines*2;
@@ -10,7 +12,7 @@ let hoverColor = null;
 const blockRGBA = [0, 255, 255, 0.2];
 const fill = Array.from({length: numLines}, () => Array(numCircles).fill(0));
 const filledList = []
-let hoverPos = {d: -1, r: -1};
+let hoverPos = {d: numCircles, r: numCircles};
 //canvas settings
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
@@ -46,10 +48,12 @@ const showPos = (e) => {
 }
 
 const getGroupId = (num) => {
+  // console.log(num, groupList, groupList.findIndex(group => group.number === num));
   return groupList.findIndex(group => group.number === num);
 }
 
 const fillBlock = (d, r, color) => {
+  //console.log(d, r)
   ctx.beginPath();
   ctx.fillStyle = color;
   ctx.moveTo(mid + r*rUnit*Math.cos((d+1)*dUnit), mid + r*rUnit*Math.sin((d+1)*dUnit));
@@ -60,13 +64,22 @@ const fillBlock = (d, r, color) => {
   ctx.fill(); 
 }
 
-const markInitBlock = (group) => {
+const fillBigCircle = (color) => {
   ctx.beginPath();
-  ctx.strokeStyle = group.color;
-  ctx.lineWidth = 4;
-  const n = group.number;
-  ctx.arc(mid, mid, R, n*3*dUnit, (n*3 - 1)*dUnit, true);
-  ctx.stroke();
+  ctx.fillStyle = color;
+  ctx.moveTo(mid + rUnit*bigCircleSize, mid);
+  ctx.arc(mid, mid, rUnit*bigCircleSize, 0, 2*Math.PI);
+  ctx.fill(); 
+}
+
+const markInitBlock = (group) => {
+  const d = (group.number-1)*3
+  const r = numCircles-1;
+  fillBlock(d, r, group.color);
+  fillBlock(d, r-1, group.color);
+  console.log(d, r);
+  fill[d][r] = group.number;
+  fill[d][r-1] = group.number;
 }
 
 const init = () => {  
@@ -76,21 +89,33 @@ const init = () => {
   ctx.lineWidth = 2;
   ctx.strokeStyle = 'rgb(255,255,255)';
   for (let i = 0; i < numLines; i++) {
-    ctx.moveTo(mid, mid);
+    ctx.moveTo(mid + bigCircleSize*rUnit*Math.cos(Math.PI/numLines*2*i), mid + bigCircleSize*rUnit*Math.sin(dUnit*i));
     ctx.lineTo(mid + R*Math.cos(Math.PI/numLines*2*i), mid + R*Math.sin(dUnit*i));
   }
-  for (let i = 1; i <= numCircles; i++) {
+  for (let i = bigCircleSize; i <= numCircles; i++) {
     ctx.moveTo(mid + rUnit*i, mid);
     ctx.arc(mid, mid, rUnit*i, 0, 2*Math.PI);
   }
+
   ctx.stroke();
-  groupList.forEach(group => markInitBlock(group))
+  groupList.forEach(group => {
+    markInitBlock(group);
+  });
+
   fill.forEach((_, d) => _.forEach((x, r) => {
     if (x !== 0) {
       fillBlock(d, r, groupList[getGroupId(fill[d][r])].color);
     }
   }))
-  
+  bigCircleId = localStorage.getItem('bigCircleId');
+  if (bigCircleId && bigCircleId !== '0'){
+    bigCircleId = Number(bigCircleId);
+    console.log(bigCircleId);
+    fillBigCircle(groupList[getGroupId(bigCircleId)].color);
+  } else {
+    localStorage.setItem('bigCircleId', 0);
+    bigCircleId = 0;
+  }
 }
 
 const getPos = (e) => {
@@ -104,10 +129,26 @@ const getPos = (e) => {
 const onClick = (e) => {
   if (!filledColor) return;
   let [d, r] = getPos(e);
+  if (d % 3 === 0 && (r === numCircles - 1 ||  r === numCircles - 2)) return;
   if (r < numCircles) {
-    if (fill[d][r] === 0) {
+    if (r < bigCircleSize) {
+      if (bigCircleId === 0) {
+        const idx = getGroupId(currentGroup);
+        fillBigCircle(filledColor);
+        groupList[idx].score += 2;
+        bigCircleId = groupList[idx].number;
+        localStorage.setItem(`bigCircleId`, groupList[idx].number);
+        changeRank();
+      } else {
+        groupList[getGroupId(bigCircleId)].score -= 2
+        localStorage.removeItem(`bigCircleId`);
+        bigCircleId = 0;
+        init();
+        changeRank()
+      }
+    } else if (fill[d][r] === 0) {
       const idx = getGroupId(currentGroup);
-      fill[d][r] = currentGroup
+      fill[d][r] = currentGroup;
       fillBlock(d, r, filledColor);
       groupList[idx].score += 1
       localStorage.setItem(`${d}_${r}`, groupList[idx].number);
@@ -127,13 +168,19 @@ const onClick = (e) => {
 const onMouseMove = (e) => {
   if (!filledColor) return;
   let [d, r] = getPos(e);
-  if (r >= numCircles) [d, r] = [-1, -1];
-  if (d !== hoverPos.d || r!== hoverPos.r) {
-    if (hoverPos.d > -1 && fill[hoverPos.d][hoverPos.r] === 0) {
+  if (r >= numCircles) r = numCircles + 1
+  //console.log(hoverPos.r, bigCircleSize)
+  //console.log(d, r)
+  if (r < bigCircleSize) {
+    if (hoverPos.r >= bigCircleSize) {
       init();
+      fillBigCircle(hoverColor);
     }
+    hoverPos = {d:0, r:bigCircleSize-1};
+  }else if (d !== hoverPos.d || r!== hoverPos.r) {
+    if (hoverPos.r < numCircles && fill[hoverPos.d][hoverPos.r] === 0) init();
     hoverPos = {d, r};
-    if (d > -1 && fill[d][r] === 0) fillBlock(d, r, hoverColor);
+    if (hoverPos.r < numCircles && fill[d][r] === 0 && (d % 3 !== 0 || r === numCircles - 1 &&  r === numCircles - 2)) fillBlock(d, r, hoverColor);
   }
 }
 
@@ -163,7 +210,7 @@ const generateGroups = () => {
               color: localStorage.getItem("color"+i),
               darkenColor: localStorage.getItem("darkenColor"+i),
               hoverColor: localStorage.getItem("hoverColor"+i),
-              score: Number(localStorage.getItem("score"+i))
+              score: Number(localStorage.getItem("score"+i)) 
           }
       }
       else{
@@ -176,7 +223,7 @@ const generateGroups = () => {
               color: `rgb(${r},${g},${b})`,
               darkenColor: `rgb(${r*0.9},${g*0.9},${b*0.9})`,
               hoverColor: `rgba(${r},${g},${b},0.2)`,
-              score: 0
+              score: 2
           };
           localStorage.setItem("color"+i, group.color);
           localStorage.setItem("darkenColor"+i, group.darkenColor);
@@ -206,7 +253,6 @@ const generateGroups = () => {
     fill.forEach((_, d) => _.forEach((x, r) => {
       if (localStorage.getItem(`${d}_${r}`)) {
         fill[d][r] = Number(localStorage.getItem(`${d}_${r}`));
-        console.log(`restore:${Number(localStorage.getItem(`${d}_${r}`))}`);
       }
     }))
   }

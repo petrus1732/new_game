@@ -14,7 +14,7 @@ body {
 }
 
 canvas {
-  background-color: rgb(10, 10, 10);
+  background-color: black
 }
 
 #right, #left {
@@ -32,7 +32,7 @@ canvas {
   width: 290px;
   height: 90vh;
   padding: 20px 20px;
-  border-radius: 20px;
+  border-radius: 30px;
   right: 20px;
   top: 5vh;
 }
@@ -96,4 +96,42 @@ canvas {
   width: 150px;
   color: black;
   font-size: 30px;
+}
+
+#broadcast {
+  position: fixed;
+  left: 30px;
+  top: 50vh;
+  transform: translateY(-50%);
+  width: 300px;
+  border-radius: 30px;
+  padding: 10px;
+  font-size: 20px;
+  word-wrap: normal;
+}
+
+#broadcast-title {
+  width: 300px;
+  font-size: 25px;
+  height: 50px;
+  line-height: 50px;
+  background-color: rgb(50,50,50);
+  color: gold;
+  text-align: center;
+  resize: none;
+  border-radius: 10px 10px 0 0;
+}
+
+#broadcast-content {
+  width: 300px;
+  font-size: 20px;
+  background-color: rgb(50,50,50);
+  color: white;
+  resize: vertical;
+  border-radius: 0 0 10px 10px;
+}
+
+
+#broadcast-title::-webkit-scrollbar, #broadcast-content::-webkit-scrollbar {
+  display: none;
 }
